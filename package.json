@@ -56,7 +56,7 @@
   },
   "dependencies": {
     "@huggingface/transformers": "^3.8.1",
-    "@lancedb/lancedb": "0.22.3",
+    "@lancedb/lancedb": "0.31.0",
     "@modelcontextprotocol/sdk": "^1.25.0",
     "apache-arrow": "^18.1.0",
     "better-sqlite3": "^12.6.2",
