@@ -55,22 +55,22 @@
     "node": ">=22.0.0"
   },
   "dependencies": {
-    "@huggingface/transformers": "^3.8.1",
-    "@lancedb/lancedb": "0.22.3",
+    "@huggingface/transformers": "^4.2.0",
+    "@lancedb/lancedb": "0.31.0",
     "@modelcontextprotocol/sdk": "^1.25.0",
-    "apache-arrow": "^18.1.0",
-    "better-sqlite3": "^12.6.2",
+    "apache-arrow": "^21.2.0",
+    "better-sqlite3": "^13.0.1",
     "tesseract.js": "^7.0.0",
     "unzipper": "^0.12.5",
-    "zod": "^3.25.0"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@biomejs/biome": "^1.9.4",
+    "@biomejs/biome": "^2.5.5",
     "@types/better-sqlite3": "^7.6.13",
-    "@types/node": "^22.10.0",
+    "@types/node": "^26.1.1",
     "@types/unzipper": "^0.10.11",
     "tsx": "^4.19.0",
-    "typescript": "^5.7.0",
-    "vitest": "^3.0.0"
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10"
   }
 }
