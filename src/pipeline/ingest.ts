@@ -7,7 +7,8 @@ import type { Config } from '../config.js';
 import { VcmError } from '../errors.js';
 import type { VideoRef } from '../ids.js';
 import { resolveRef } from '../ids.js';
-import { RuntimeManager } from '../runtime/manager.js';
+import { RuntimeManager, type RuntimeProgress } from '../runtime/manager.js';
+import type { ManagedTool } from '../runtime/manifest.js';
 import { extractFrames } from './frames.js';
 import { classifyFrame, ocrFrame } from './ocr.js';
 import { mergeCues, parseVtt } from './vtt.js';
@@ -43,6 +44,12 @@ export interface EmbedStats {
 }
 
 export interface IngestManagerOps {
+  ensureTools?: (
+    tools: ManagedTool[],
+    onProgress?: RuntimeProgress,
+  ) => Promise<Record<ManagedTool, string | undefined>>;
+  fetchYoutubeMetadata?: typeof fetchYoutubeMetadata;
+  downloadCaptions?: typeof downloadCaptions;
   embedVideo?: (db: Database.Database, videoId: string, config: Config) => Promise<EmbedStats>;
 }
 
@@ -534,9 +541,11 @@ export class IngestManager {
       if (ref.kind === 'youtube') needed.add('ytdlp');
       else needed.add('ffprobe');
       if (opts.visual !== false || opts.whisperFallback) needed.add('ffmpeg');
-      const paths = await this.runtime.ensureTools([...needed], (pct, detail) =>
-        this.setProgress(ref.id, 'setup', 1 + Math.round(pct * 0.04), detail),
-      );
+      const onRuntimeProgress = (pct: number, detail: string) =>
+        this.setProgress(ref.id, 'setup', 1 + Math.round(pct * 0.04), detail);
+      const paths = this.ops.ensureTools
+        ? await this.ops.ensureTools([...needed], onRuntimeProgress)
+        : await this.runtime.ensureTools([...needed], onRuntimeProgress);
       this.runtime.applyResolved(paths);
 
       this.setStage(ref.id, 'metadata', 5);
@@ -544,7 +553,10 @@ export class IngestManager {
       let captionTrack: { lang: string; auto: boolean } | null = null;
 
       if (ref.kind === 'youtube') {
-        const meta = await fetchYoutubeMetadata(ref, this.config);
+        const meta = await (this.ops.fetchYoutubeMetadata ?? fetchYoutubeMetadata)(
+          ref,
+          this.config,
+        );
         this.assertOwnsJob(ref.id);
         this.db
           .prepare(
@@ -557,7 +569,12 @@ export class IngestManager {
         captionTrack = pickCaptionTrack(meta);
         if (captionTrack) {
           mkdirSync(workDir, { recursive: true });
-          captionsVtt = await downloadCaptions(ref, captionTrack, workDir, this.config);
+          captionsVtt = await (this.ops.downloadCaptions ?? downloadCaptions)(
+            ref,
+            captionTrack,
+            workDir,
+            this.config,
+          );
           this.assertOwnsJob(ref.id);
         }
       } else {

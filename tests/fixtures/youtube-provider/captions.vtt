@@ -1,0 +1,9 @@
+WEBVTT
+Kind: captions
+Language: en
+
+00:00:01.000 --> 00:00:05.000
+This deterministic fixture describes elephants.
+
+00:00:10.000 --> 00:00:15.000
+It exercises transcript search without contacting a provider.

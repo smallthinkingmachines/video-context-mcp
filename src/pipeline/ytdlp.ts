@@ -33,6 +33,33 @@ export interface VideoMetadata {
   autoCaptionLangs: string[];
 }
 
+/** Parse the stable subset of yt-dlp metadata consumed by the ingest pipeline. */
+export function parseYoutubeMetadata(stdout: string, fallbackId: string): VideoMetadata {
+  let info: Record<string, unknown>;
+  try {
+    info = JSON.parse(stdout) as Record<string, unknown>;
+  } catch {
+    throw new VcmError('YTDLP_FAILED', 'yt-dlp returned unparseable metadata JSON.');
+  }
+  const chaptersRaw = Array.isArray(info.chapters)
+    ? (info.chapters as { start_time?: number; title?: string }[])
+    : [];
+  return {
+    title: typeof info.title === 'string' ? info.title : fallbackId,
+    channel: typeof info.channel === 'string' ? info.channel : null,
+    uploadDate: normalizeUploadDate(info.upload_date),
+    durationS: typeof info.duration === 'number' ? info.duration : null,
+    chapters: chaptersRaw
+      .filter((c) => typeof c.start_time === 'number' && typeof c.title === 'string')
+      .map((c) => ({
+        startMs: Math.round((c.start_time as number) * 1000),
+        title: c.title as string,
+      })),
+    manualCaptionLangs: Object.keys((info.subtitles as object) ?? {}),
+    autoCaptionLangs: Object.keys((info.automatic_captions as object) ?? {}),
+  };
+}
+
 /** Normalize yt-dlp's YYYYMMDD value; reject impossible calendar dates. */
 export function normalizeUploadDate(value: unknown): string | null {
   if (typeof value !== 'string' || !/^\d{8}$/.test(value)) return null;
@@ -87,29 +114,7 @@ export async function fetchYoutubeMetadata(ref: VideoRef, config: Config): Promi
     config,
     METADATA_TIMEOUT_MS,
   );
-  let info: Record<string, unknown>;
-  try {
-    info = JSON.parse(stdout) as Record<string, unknown>;
-  } catch {
-    throw new VcmError('YTDLP_FAILED', 'yt-dlp returned unparseable metadata JSON.');
-  }
-  const chaptersRaw = Array.isArray(info.chapters)
-    ? (info.chapters as { start_time?: number; title?: string }[])
-    : [];
-  return {
-    title: typeof info.title === 'string' ? info.title : ref.id,
-    channel: typeof info.channel === 'string' ? info.channel : null,
-    uploadDate: normalizeUploadDate(info.upload_date),
-    durationS: typeof info.duration === 'number' ? info.duration : null,
-    chapters: chaptersRaw
-      .filter((c) => typeof c.start_time === 'number' && typeof c.title === 'string')
-      .map((c) => ({
-        startMs: Math.round((c.start_time as number) * 1000),
-        title: c.title as string,
-      })),
-    manualCaptionLangs: Object.keys((info.subtitles as object) ?? {}),
-    autoCaptionLangs: Object.keys((info.automatic_captions as object) ?? {}),
-  };
+  return parseYoutubeMetadata(stdout, ref.id);
 }
 
 /** Prefer manual English > any manual > auto English > any auto. */

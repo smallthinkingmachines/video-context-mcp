@@ -6,6 +6,14 @@ All notable changes to this project will be documented here. The format follows
 
 ## Unreleased
 
+### Changed
+
+- Release automation no longer contacts YouTube. Provider-boundary behavior is
+  covered by deterministic metadata and caption fixtures, while the live smoke
+  test remains an explicit maintainer command.
+- The release workflow can manually resume an existing signed tag without
+  moving it or publishing code from another commit.
+
 ## [0.8.0] - 2026-07-26
 
 ### Added

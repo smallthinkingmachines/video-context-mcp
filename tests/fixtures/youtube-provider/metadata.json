@@ -1,0 +1,26 @@
+{
+  "id": "fixtureVid1",
+  "title": "Deterministic Provider Fixture",
+  "channel": "Fixture Channel",
+  "upload_date": "20260726",
+  "duration": 19,
+  "chapters": [
+    {
+      "start_time": 0,
+      "title": "Fixture introduction"
+    },
+    {
+      "start_time": 10,
+      "title": "Fixture search"
+    }
+  ],
+  "subtitles": {
+    "en": [
+      {
+        "ext": "vtt",
+        "url": "https://fixtures.invalid/captions.vtt"
+      }
+    ]
+  },
+  "automatic_captions": {}
+}

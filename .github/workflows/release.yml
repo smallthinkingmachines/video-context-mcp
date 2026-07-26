@@ -3,12 +3,21 @@ name: Release
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing signed v* tag to verify and publish
+        required: true
+        type: string
 
 permissions: {}
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-${{ inputs.release_tag || github.ref }}
   cancel-in-progress: false
+
+env:
+  RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
 
 jobs:
   verify:
@@ -23,6 +32,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
+          ref: ${{ env.RELEASE_TAG }}
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: 24
@@ -34,13 +44,13 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
-      - run: npm run release:check -- "$GITHUB_REF_NAME"
+      - run: npm run release:check -- "$RELEASE_TAG"
         env:
           GH_TOKEN: ${{ github.token }}
       - run: npm run package:smoke
       - id: version
         shell: bash
-        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+        run: echo "version=${RELEASE_TAG#v}" >> "$GITHUB_OUTPUT"
 
   runtime:
     name: Managed runtime matrix
@@ -48,27 +58,12 @@ jobs:
     permissions:
       contents: read
     uses: ./.github/workflows/runtime-smoke.yml
-
-  e2e:
-    name: Network E2E
-    needs: verify
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm run build
-      - run: VCM_E2E=1 npx vitest run tests/e2e.test.ts
+    with:
+      ref: ${{ inputs.release_tag || github.ref_name }}
 
   publish:
     name: Publish to npm
-    needs: [verify, runtime, e2e]
+    needs: [verify, runtime]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: npm
@@ -77,6 +72,8 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ env.RELEASE_TAG }}
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: 24
@@ -99,6 +96,8 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ env.RELEASE_TAG }}
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: 24
@@ -115,11 +114,13 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ env.RELEASE_TAG }}
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: 24
           package-manager-cache: false
-      - run: node scripts/release-check.mjs "$GITHUB_REF_NAME" --write-notes "$RUNNER_TEMP/release-notes.md" --skip-remote --skip-pack
-      - run: gh release create "$GITHUB_REF_NAME" --verify-tag --title "video-context-mcp $GITHUB_REF_NAME" --notes-file "$RUNNER_TEMP/release-notes.md"
+      - run: node scripts/release-check.mjs "$RELEASE_TAG" --write-notes "$RUNNER_TEMP/release-notes.md" --skip-remote --skip-pack
+      - run: gh release create "$RELEASE_TAG" --verify-tag --title "video-context-mcp $RELEASE_TAG" --notes-file "$RUNNER_TEMP/release-notes.md"
         env:
           GH_TOKEN: ${{ github.token }}

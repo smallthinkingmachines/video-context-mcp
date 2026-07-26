@@ -10,9 +10,11 @@ publish from a workstation or move an existing release tag.
    `[<version>]` heading.
 3. Run `npm version --no-git-tag-version <version>`, update `src/version.ts` to
    the same version, and review `package-lock.json`.
-4. Run a clean `npm ci`, `just ci`, `just e2e`,
+4. Run a clean `npm ci`, `just ci`,
    `npm run release:check -- v<version> --skip-remote`, and
-   `npm run package:smoke`.
+   `npm run package:smoke`. Run `just e2e` intentionally from a maintainer
+   workstation when the release changes yt-dlp integration or the live provider
+   boundary; it is not an automated release gate.
 5. Merge the approved pull request with a squash merge and wait for all four
    required CI checks on `main`.
 
@@ -26,7 +28,8 @@ publish from a workstation or move an existing release tag.
    ```
 
 2. Confirm the Release workflow verifies the tag, package metadata, package
-   tarball, network E2E, and four-platform managed runtime matrix.
+   tarball, deterministic provider fixtures, and four-platform managed runtime
+   matrix without contacting YouTube.
 3. Review and approve the protected `npm` environment deployment.
 4. Wait for npm publication, fresh-install verification, and GitHub release
    creation to complete.
@@ -50,3 +53,22 @@ secret once. Immediately after v0.8.0 succeeds:
 Future releases use GitHub OIDC automatically. If a published release is bad,
 deprecate it if necessary and publish a patch; never reuse a version or move its
 tag.
+
+## Resume an existing tag
+
+If infrastructure prevents a tag-triggered run from reaching the protected npm
+deployment, use the Release workflow's manual `release_tag` input. The workflow
+checks out that exact tag and `release:check` rejects missing, lightweight,
+unsigned, unverified, mismatched, or off-main tags before publication.
+
+Because a manual run's Git ref is the default branch, temporarily add `main` to
+the npm environment's selected deployment branches, approve only the expected
+run, and remove that branch rule immediately afterward. The normal release path
+remains restricted to `v*` tags.
+
+## Live provider check
+
+`just e2e` makes a real provider request and is deliberately local and opt-in.
+Do not schedule it in GitHub Actions or make it a pull-request or release gate.
+The deterministic fixture-backed integration test covers metadata, captions,
+ingestion, transcript search, embedding repair, and cleanup on every CI run.

@@ -187,8 +187,13 @@ your own authorization layer.
 ```bash
 just setup   # npm install
 just ci      # lint + typecheck + test + build
-just e2e     # network-gated end-to-end test against a real video
+just e2e     # opt-in live provider check from a maintainer workstation
 ```
+
+Automated CI and releases never contact YouTube. They exercise the same ingest
+boundary with synthetic yt-dlp-shaped metadata and caption fixtures; `just e2e` is reserved
+for intentional provider-health checks because hosted-runner traffic is prone
+to bot challenges and is not a deterministic measure of package quality.
 
 Nix is optional; the repository's standard workflow is Node 22 plus `just`. See
 [`CONTRIBUTING.md`](CONTRIBUTING.md) for project rules,
