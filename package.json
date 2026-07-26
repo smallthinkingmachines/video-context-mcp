@@ -17,6 +17,8 @@
   },
   "files": [
     "dist",
+    "vendor/transformers.node.min.mjs",
+    "vendor/transformers.LICENSE",
     "README.md",
     "CHANGELOG.md",
     "CONTRIBUTING.md",
@@ -44,6 +46,11 @@
     "access": "public",
     "provenance": true
   },
+  "overrides": {
+    "@hono/node-server": "2.0.12",
+    "sharp": "0.35.3",
+    "tar": "7.5.22"
+  },
   "keywords": [
     "mcp-server",
     "youtube",
@@ -62,17 +69,20 @@
     "node": ">=22.0.0"
   },
   "dependencies": {
-    "@huggingface/transformers": "^3.8.1",
     "@lancedb/lancedb": "0.22.3",
     "@modelcontextprotocol/sdk": "^1.25.0",
     "apache-arrow": "^18.1.0",
     "better-sqlite3": "^12.6.2",
+    "onnxruntime-node": "1.21.0",
+    "sharp": "0.35.3",
+    "tar": "7.5.22",
     "tesseract.js": "^7.0.0",
     "unzipper": "^0.12.5",
     "zod": "^3.25.0"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
+    "@huggingface/transformers": "3.8.1",
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^22.10.0",
     "@types/unzipper": "^0.10.11",

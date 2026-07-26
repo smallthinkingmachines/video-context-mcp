@@ -3,6 +3,8 @@
 /.github/workflows/ @smallthinkingmachines/release-maintainers
 /package.json @smallthinkingmachines/release-maintainers
 /package-lock.json @smallthinkingmachines/release-maintainers
+/vendor/ @smallthinkingmachines/release-maintainers
+/.gitleaksignore @smallthinkingmachines/release-maintainers
 /CHANGELOG.md @smallthinkingmachines/release-maintainers
 /RELEASING.md @smallthinkingmachines/release-maintainers
 /SECURITY.md @smallthinkingmachines/release-maintainers

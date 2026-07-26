@@ -1,0 +1,3 @@
+# Transformers.js tokenizer field name; the vendored file's upstream SHA-256
+# is enforced by scripts/release-check.mjs.
+vendor/transformers.node.min.mjs:generic-api-key:1

@@ -35,3 +35,6 @@ All notable changes to this project will be documented here. The format follows
   is assigned, allowing GitHub to validate and schedule the workflow.
 - Linux managed FFmpeg now uses one checksum-pinned GPL BtbN archive for both
   `ffmpeg` and `ffprobe`; nonfree builds remain rejected at load time.
+- The published CLI vendors its pinned Transformers.js Node bundle and directly
+  installs security-fixed Sharp and tar releases instead of exposing vulnerable
+  transitive ranges to users.

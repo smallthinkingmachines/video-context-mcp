@@ -35,6 +35,44 @@ function run(command, commandArgs, options = {}) {
   return { stdout: result.stdout ?? '', stderr: result.stderr ?? '' };
 }
 
+function auditInstall() {
+  const result = spawnSync(
+    npm,
+    ['audit', '--prefix', installDir, '--omit=dev', '--json', '--cache', npmEnv.npm_config_cache],
+    { encoding: 'utf8', env: npmEnv },
+  );
+  let report;
+  try {
+    report = JSON.parse(result.stdout ?? '');
+  } catch {
+    throw new Error(
+      `npm audit returned invalid JSON\n${result.stdout ?? ''}\n${result.stderr ?? ''}`,
+    );
+  }
+  const counts = report.metadata?.vulnerabilities ?? {};
+  const vulnerabilities = report.vulnerabilities ?? {};
+  const allowedNames = new Set([
+    '@hono/node-server',
+    '@modelcontextprotocol/sdk',
+    '@smallthinkingmachines/video-context-mcp',
+  ]);
+  const unexpected = Object.keys(vulnerabilities).filter((name) => !allowedNames.has(name));
+  const honoAdvisory = vulnerabilities['@hono/node-server']?.via?.some(
+    (entry) => typeof entry === 'object' && entry.source === 1124006,
+  );
+  if ((counts.high ?? 0) > 0 || (counts.critical ?? 0) > 0 || unexpected.length > 0) {
+    throw new Error(`installed package audit failed\n${result.stdout ?? ''}`);
+  }
+  if ((counts.moderate ?? 0) > 0 && !honoAdvisory) {
+    throw new Error(
+      `installed package has an unapproved moderate advisory\n${result.stdout ?? ''}`,
+    );
+  }
+  if (result.error || (result.status !== 0 && (counts.moderate ?? 0) === 0)) {
+    throw new Error(`npm audit failed to run\n${result.stderr ?? ''}`);
+  }
+}
+
 async function install(target) {
   const attempts = requestedSpec ? 12 : 1;
   let lastError;
@@ -83,6 +121,7 @@ try {
   }
 
   await install(target);
+  auditInstall();
   const packageRoot = join(
     installDir,
     'node_modules',

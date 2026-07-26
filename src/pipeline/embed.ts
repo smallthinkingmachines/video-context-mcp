@@ -10,7 +10,7 @@ import { createHash } from 'node:crypto';
 import { createReadStream, lstatSync } from 'node:fs';
 import { rm } from 'node:fs/promises';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
-import type { FeatureExtractionPipeline } from '@huggingface/transformers';
+import type * as transformersT from '@huggingface/transformers';
 import type * as lancedbT from '@lancedb/lancedb';
 import type Database from 'better-sqlite3';
 import { type Config, DEFAULT_EMBED_MODEL, DEFAULT_EMBED_REVISION } from '../config.js';
@@ -18,6 +18,8 @@ import { VcmError } from '../errors.js';
 import { type RuntimeLock, acquireRuntimeLock } from '../runtime/lock.js';
 
 const TABLE = 'chunks';
+type FeatureExtractionPipeline = transformersT.FeatureExtractionPipeline;
+const TRANSFORMERS_RUNTIME = '../../vendor/transformers.node.min.mjs';
 const BATCH_SIZE = 16;
 const MAX_DOC_CHARS = 1000;
 const MIN_SCREEN_CHARS = 20;
@@ -277,7 +279,7 @@ export async function removeInvalidEmbeddingArtifact(config: Config): Promise<vo
 }
 
 async function initializePipeline(config: Config): Promise<FeatureExtractionPipeline> {
-  const { pipeline, env } = await import('@huggingface/transformers');
+  const { pipeline, env } = (await import(TRANSFORMERS_RUNTIME)) as typeof transformersT;
   env.cacheDir = join(config.cacheDir, 'transformers');
   return (await pipeline('feature-extraction', config.embedModel, {
     dtype: 'q8',

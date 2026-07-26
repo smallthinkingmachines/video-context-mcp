@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -11,6 +12,10 @@ const writeNotesIndex = args.indexOf('--write-notes');
 const notesPath = writeNotesIndex === -1 ? null : args[writeNotesIndex + 1];
 const skipRemote = args.includes('--skip-remote');
 const skipPack = args.includes('--skip-pack');
+const transformersRuntimePath = 'vendor/transformers.node.min.mjs';
+const transformersLicensePath = 'vendor/transformers.LICENSE';
+const transformersRuntimeSha256 =
+  '6029d33154e63e02f58405ec20b9e4152e524447a26b24299415fe537c874a1d';
 
 function fail(message) {
   console.error(`[release-check] ${message}`);
@@ -70,6 +75,20 @@ if (lock.version !== version || lock.packages?.['']?.version !== version) {
 if (pkg.publishConfig?.access !== 'public' || pkg.publishConfig?.provenance !== true) {
   fail('package.json must publish publicly with provenance');
 }
+if (
+  pkg.devDependencies?.['@huggingface/transformers'] !== '3.8.1' ||
+  pkg.dependencies?.['onnxruntime-node'] !== '1.21.0' ||
+  pkg.dependencies?.sharp !== '0.35.3' ||
+  pkg.dependencies?.tar !== '7.5.22'
+) {
+  fail('the vendored Transformers.js runtime and its direct runtime dependencies changed');
+}
+const actualTransformersRuntimeSha256 = createHash('sha256')
+  .update(readFileSync(transformersRuntimePath))
+  .digest('hex');
+if (actualTransformersRuntimeSha256 !== transformersRuntimeSha256) {
+  fail(`the vendored Transformers.js runtime checksum is ${actualTransformersRuntimeSha256}`);
+}
 
 const sourceVersion = readFileSync('src/version.ts', 'utf8').match(
   /VERSION\s*=\s*['"]([^'"]+)['"]/,
@@ -92,6 +111,8 @@ if (!skipPack) {
   const paths = new Set(result.files.map((file) => file.path));
   for (const required of [
     'package.json',
+    transformersRuntimePath,
+    transformersLicensePath,
     'README.md',
     'LICENSE',
     'THIRD_PARTY_NOTICES.md',

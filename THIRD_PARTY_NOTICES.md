@@ -38,7 +38,9 @@ retain the matching upstream source/build information.
 ## JavaScript/WASM components
 
 - Tesseract.js — Apache-2.0: https://github.com/naptha/tesseract.js
-- Transformers.js — Apache-2.0: https://github.com/huggingface/transformers.js
+- Transformers.js 3.8.1 (vendored Node bundle, upstream commit
+  `2ec882e739e4cb461f8d440d4d7394cbf5372429`) — Apache-2.0:
+  https://github.com/huggingface/transformers.js/tree/2ec882e739e4cb461f8d440d4d7394cbf5372429
 - `Xenova/whisper-base.en` model files — Apache-2.0:
   https://huggingface.co/Xenova/whisper-base.en
 - `Xenova/all-MiniLM-L6-v2` model files — Apache-2.0:

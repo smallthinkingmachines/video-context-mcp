@@ -20,15 +20,15 @@ import { basename, dirname, join } from 'node:path';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { promisify } from 'node:util';
-import type {
-  AutomaticSpeechRecognitionOutput,
-  AutomaticSpeechRecognitionPipelineType,
-  Chunk,
-} from '@huggingface/transformers';
+import type * as transformersT from '@huggingface/transformers';
 import type { Config } from '../config.js';
 import { VcmError } from '../errors.js';
 
 const execFileAsync = promisify(execFile);
+type AutomaticSpeechRecognitionOutput = transformersT.AutomaticSpeechRecognitionOutput;
+type AutomaticSpeechRecognitionPipelineType = transformersT.AutomaticSpeechRecognitionPipelineType;
+type Chunk = transformersT.Chunk;
+const TRANSFORMERS_RUNTIME = '../../vendor/transformers.node.min.mjs';
 
 const DEFAULT_MODEL = 'ggml-base.en.bin';
 const NATIVE_MODEL_REVISION = '5359861c739e955e79d9a303bcbc70fb988958b1';
@@ -248,7 +248,7 @@ async function loadAsrPipeline(
 ): Promise<AutomaticSpeechRecognitionPipelineType> {
   const key = `${config.asrModel}@${config.asrRevision}:${config.cacheDir}`;
   if (asrPipeline && asrPipelineKey === key) return asrPipeline;
-  const { pipeline, env } = await import('@huggingface/transformers');
+  const { pipeline, env } = (await import(TRANSFORMERS_RUNTIME)) as typeof transformersT;
   env.cacheDir = join(config.cacheDir, 'transformers');
   asrPipelineKey = key;
   asrPipeline = pipeline('automatic-speech-recognition', config.asrModel, {
