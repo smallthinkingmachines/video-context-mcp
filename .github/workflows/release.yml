@@ -1,0 +1,125 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions: {}
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Verify release
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+      - run: npm install --global npm@11.18.0
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - run: npm run release:check -- "$GITHUB_REF_NAME"
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - run: npm run package:smoke
+      - id: version
+        shell: bash
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+  runtime:
+    name: Managed runtime matrix
+    needs: verify
+    permissions:
+      contents: read
+    uses: ./.github/workflows/runtime-smoke.yml
+
+  e2e:
+    name: Network E2E
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: VCM_E2E=1 npx vitest run tests/e2e.test.ts
+
+  publish:
+    name: Publish to npm
+    needs: [verify, runtime, e2e]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+      - run: npm install --global npm@11.18.0
+      - run: npm ci
+      - run: npm publish --access public --provenance
+        env:
+          # Required only for the first publish. npm OIDC takes precedence once
+          # Trusted Publishing is configured; keep the secret deleted afterward.
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_BOOTSTRAP_TOKEN }}
+
+  verify-published:
+    name: Verify published package
+    needs: [verify, publish]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - run: npm install --global npm@11.18.0
+      - run: npm ci
+      - run: npm run package:smoke -- --spec "@smallthinkingmachines/video-context-mcp@${{ needs.verify.outputs.version }}" --managed
+
+  github-release:
+    name: Create GitHub release
+    needs: [verify, verify-published]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - run: node scripts/release-check.mjs "$GITHUB_REF_NAME" --write-notes "$RUNNER_TEMP/release-notes.md" --skip-remote --skip-pack
+      - run: gh release create "$GITHUB_REF_NAME" --verify-tag --title "video-context-mcp $GITHUB_REF_NAME" --notes-file "$RUNNER_TEMP/release-notes.md"
+        env:
+          GH_TOKEN: ${{ github.token }}

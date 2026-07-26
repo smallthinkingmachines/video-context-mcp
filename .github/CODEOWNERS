@@ -1,0 +1,9 @@
+# Release-critical code and metadata.
+/src/ @smallthinkingmachines/release-maintainers
+/.github/workflows/ @smallthinkingmachines/release-maintainers
+/package.json @smallthinkingmachines/release-maintainers
+/package-lock.json @smallthinkingmachines/release-maintainers
+/CHANGELOG.md @smallthinkingmachines/release-maintainers
+/RELEASING.md @smallthinkingmachines/release-maintainers
+/SECURITY.md @smallthinkingmachines/release-maintainers
+/THIRD_PARTY_NOTICES.md @smallthinkingmachines/release-maintainers

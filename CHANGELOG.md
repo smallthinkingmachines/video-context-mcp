@@ -6,6 +6,8 @@ All notable changes to this project will be documented here. The format follows
 
 ## Unreleased
 
+## [0.8.0] - 2026-07-26
+
 ### Added
 
 - Complete transcript-range export to a local UTF-8 file through

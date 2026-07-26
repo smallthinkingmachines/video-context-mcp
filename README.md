@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/smallthinkingmachines/video-context-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/smallthinkingmachines/video-context-mcp/actions/workflows/ci.yml)
 [![Managed runtime smoke](https://github.com/smallthinkingmachines/video-context-mcp/actions/workflows/runtime-smoke.yml/badge.svg)](https://github.com/smallthinkingmachines/video-context-mcp/actions/workflows/runtime-smoke.yml)
+[![npm version](https://img.shields.io/npm/v/@smallthinkingmachines/video-context-mcp.svg)](https://www.npmjs.com/package/@smallthinkingmachines/video-context-mcp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 An MCP server that lets AI agents **search, inspect, and reason over video** using timestamped transcripts, chapters,
@@ -53,12 +54,10 @@ runtime and models.
 
 ## Install & register
 
-Not yet published to npm — install from source:
+Install the published package globally:
 
 ```bash
-git clone https://github.com/smallthinkingmachines/video-context-mcp.git
-cd video-context-mcp
-npm install && npm run build
+npm install -g @smallthinkingmachines/video-context-mcp
 ```
 
 **Claude Code / Gemini-style JSON config:**
@@ -67,10 +66,7 @@ npm install && npm run build
 {
   "mcpServers": {
     "video-context": {
-      "command": "node",
-      "args": [
-        "/path/to/video-context-mcp/dist/index.js"
-      ]
+      "command": "video-context-mcp"
     }
   }
 }
@@ -80,12 +76,10 @@ npm install && npm run build
 
 ```toml
 [mcp_servers.video-context]
-command = "node"
-args = ["/path/to/video-context-mcp/dist/index.js"]
+command = "video-context-mcp"
 ```
 
-Once published to npm, `npm install -g @smallthinkingmachines/video-context-mcp` will provide a `video-context-mcp`
-binary you can use as the `command` directly.
+The global installation provides the `video-context-mcp` binary used by each client configuration.
 
 Optional bootstrap and diagnostics:
 

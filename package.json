@@ -35,8 +35,14 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "demo": "npm run build && node scripts/demo-client.mjs",
+    "release:check": "node scripts/release-check.mjs",
+    "package:smoke": "node scripts/package-smoke.mjs",
     "clean": "rm -rf dist coverage",
     "prepublishOnly": "npm run lint && npm run typecheck && npm test && npm run build"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   },
   "keywords": [
     "mcp-server",
