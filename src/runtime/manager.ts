@@ -340,7 +340,7 @@ async function extractArtifact(
   return result;
 }
 
-async function healthCheck(
+export async function healthCheck(
   path: string,
   executable: Pick<ArtifactExecutable, 'versionArgs' | 'versionPattern'>,
   rejectNonfree = false,
@@ -353,13 +353,20 @@ async function healthCheck(
     });
     const output = `${stdout}\n${stderr}`;
     if (executable.versionPattern && !new RegExp(executable.versionPattern, 'i').test(output)) {
-      throw new Error('reported an unexpected version');
+      throw new VcmError(
+        'TOOLCHAIN_UNUSABLE',
+        `Runtime executable ${basename(path)} reported an unexpected version. Run video-context-mcp setup --update to restore the package-pinned build.`,
+      );
     }
     if (rejectNonfree && /--enable-nonfree/i.test(output)) {
-      throw new Error('was built with --enable-nonfree and cannot be managed by this package');
+      throw new VcmError(
+        'TOOLCHAIN_UNUSABLE',
+        `Runtime executable ${basename(path)} was built with --enable-nonfree and cannot be used as a managed runtime. Run video-context-mcp setup --update to restore the package-pinned build.`,
+      );
     }
     return output.trim().split('\n')[0]?.slice(0, 200) ?? 'ready';
   } catch (err) {
+    if (err instanceof VcmError) throw err;
     const e = err as NodeJS.ErrnoException;
     if (e.code === 'ENOENT') {
       throw new VcmError(
@@ -664,8 +671,11 @@ export class RuntimeManager {
       const executable = recommendedExecutable
         ? {
             ...recommendedExecutable,
+            // Only package-managed binaries must match the pinned version. An explicit
+            // override or system binary is the user's choice, and ensureTool already
+            // accepts any version for those, so doctor must agree.
             versionPattern:
-              active && artifact && active.artifactId !== artifact.id
+              provider !== 'managed' || (active && artifact && active.artifactId !== artifact.id)
                 ? ''
                 : recommendedExecutable.versionPattern,
           }

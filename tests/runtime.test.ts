@@ -7,8 +7,10 @@ import { loadConfig } from '../src/config.js';
 import { VcmError } from '../src/errors.js';
 import { buildYtdlpArgs } from '../src/pipeline/ytdlp.js';
 import {
+  RuntimeManager,
   archivePathMatches,
   downloadArtifact,
+  healthCheck,
   pathIsWithin,
   validateArchivePath,
 } from '../src/runtime/manager.js';
@@ -147,5 +149,36 @@ describe('yt-dlp isolation', () => {
       '--js-runtimes',
       `node:${process.execPath}`,
     ]);
+  });
+});
+
+describe('toolchain health check', () => {
+  it('names the real reason when a binary reports an unexpected version', async () => {
+    const err = await healthCheck(process.execPath, {
+      versionArgs: ['--version'],
+      versionPattern: '^never-matches$',
+    }).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(VcmError);
+    expect((err as VcmError).code).toBe('TOOLCHAIN_UNUSABLE');
+    expect((err as VcmError).message).toContain('unexpected version');
+    expect((err as VcmError).message).not.toContain('capability check');
+  });
+
+  it('accepts any version when no pattern is required', async () => {
+    await expect(
+      healthCheck(process.execPath, { versionArgs: ['--version'], versionPattern: '' }),
+    ).resolves.toMatch(/\d/);
+  });
+
+  it('does not require an override binary to match the pinned version', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'vcm-doctor-'));
+    try {
+      const config = loadConfig({ VCM_CACHE_DIR: dir, VCM_YTDLP_BIN: process.execPath });
+      const component = await new RuntimeManager(config).doctorTool('ytdlp');
+      expect(component.provider).toBe('override');
+      expect(component.state).toBe('ready');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

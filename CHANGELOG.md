@@ -6,6 +6,14 @@ All notable changes to this project will be documented here. The format follows
 
 ## Unreleased
 
+### Fixed
+
+- `doctor` no longer reports an explicitly configured (`VCM_*_BIN`) or system
+  binary as invalid just because its version differs from the package-pinned
+  build; the server already accepted such binaries. Toolchain failures now name
+  the real reason (unexpected version, non-free FFmpeg build) instead of a
+  generic "capability check" message.
+
 ### Changed
 
 - Release automation no longer contacts YouTube. Provider-boundary behavior is
