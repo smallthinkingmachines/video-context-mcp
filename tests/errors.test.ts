@@ -39,6 +39,22 @@ describe('classifyYtdlpFailure', () => {
     expect(err.message).toContain('VCM_YTDLP_BIN');
   });
 
+  it('explains HTTP 403 media failures as an outdated yt-dlp, not a network error', () => {
+    const err = classifyYtdlpFailure(
+      'ERROR: unable to download video data: HTTP Error 403: Forbidden',
+      false,
+    );
+    expect(err.code).toBe('YTDLP_FAILED');
+    expect(err.message).toContain('HTTP 403');
+    expect(err.message).toContain('VCM_YTDLP_BIN');
+  });
+
+  it('still maps connectivity failures to NETWORK', () => {
+    expect(
+      classifyYtdlpFailure('ERROR: unable to download webpage: getaddrinfo failed', false).code,
+    ).toBe('NETWORK');
+  });
+
   it('falls back to YTDLP_FAILED without exposing raw stderr', () => {
     const err = classifyYtdlpFailure(`line1\nline2\n${'x'.repeat(2000)}`, false);
     expect(err.code).toBe('YTDLP_FAILED');

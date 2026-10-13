@@ -90,6 +90,12 @@ const YTDLP_RULES: Rule[] = [
     message: () => 'Live streams are not supported; wait until the VOD is processed by YouTube.',
   },
   {
+    pattern: /HTTP Error 403|403: Forbidden/i,
+    code: 'YTDLP_FAILED',
+    message: () =>
+      'YouTube refused the media download (HTTP 403). The managed yt-dlp is probably out of date: update this package and run video-context-mcp setup --update, or set VCM_YTDLP_BIN to a current yt-dlp. If the video needs a signed-in session, configure YTDLP_COOKIES_FILE.',
+  },
+  {
     pattern: /unable to download|network|timed out|temporary failure|getaddrinfo|ECONNRE/i,
     code: 'NETWORK',
     message: () => 'Network failure while contacting YouTube. Check connectivity and retry.',

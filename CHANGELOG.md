@@ -11,6 +11,9 @@ All notable changes to this project will be documented here. The format follows
 - Release automation no longer contacts YouTube. Provider-boundary behavior is
   covered by deterministic metadata and caption fixtures, while the live smoke
   test remains an explicit maintainer command.
+- HTTP 403 failures while downloading media now report that the managed yt-dlp
+  is probably out of date, with the remediation, instead of a generic network
+  failure.
 - The release workflow can manually resume an existing signed tag without
   moving it or publishing code from another commit.
 
