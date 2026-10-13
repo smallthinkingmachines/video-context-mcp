@@ -13,6 +13,9 @@ All notable changes to this project will be documented here. The format follows
   test remains an explicit maintainer command.
 - The release workflow can manually resume an existing signed tag without
   moving it or publishing code from another commit.
+- Keyframe extraction now keeps the last frame of each burst of consecutive
+  scene-change candidates (at most 1 s apart, cut at 5 s), so fades and zooms
+  yield the settled picture instead of a mid-transition frame.
 
 ## [0.8.0] - 2026-07-26
 

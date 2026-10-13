@@ -75,6 +75,41 @@ export function filterByGap<T extends { tsMs: number }>(
   return kept;
 }
 
+/** Consecutive scene candidates closer than this are treated as one burst. */
+const BURST_GAP_MS = 1000;
+/** A burst is cut once it spans this long, so continuous motion still yields frames. */
+const MAX_BURST_MS = 5000;
+
+/**
+ * Collapse bursts of consecutive scene-change candidates into one frame each.
+ * A fade, zoom or wipe fires scene detection on many consecutive frames, and the
+ * first of them is mid-transition. Within a burst (candidates no more than
+ * `burstGapMs` apart) keep the last frame, where the picture has settled. A burst
+ * is cut once it spans `maxBurstMs`. Input must be sorted by time.
+ */
+export function collapseBursts<T extends { tsMs: number }>(
+  frames: T[],
+  burstGapMs: number,
+  maxBurstMs: number,
+): T[] {
+  const kept: T[] = [];
+  let burstStartMs = 0;
+  let lastMs = 0;
+  let pending: T | undefined;
+  for (const f of frames) {
+    const continuesBurst =
+      pending !== undefined && f.tsMs - lastMs <= burstGapMs && f.tsMs - burstStartMs <= maxBurstMs;
+    if (!continuesBurst) {
+      if (pending) kept.push(pending);
+      burstStartMs = f.tsMs;
+    }
+    pending = f;
+    lastMs = f.tsMs;
+  }
+  if (pending) kept.push(pending);
+  return kept;
+}
+
 async function runFfmpeg(args: string[], config: Config, timeoutMs: number): Promise<string> {
   try {
     const { stderr } = await execFileAsync(config.ffmpegBin, args, {
@@ -193,6 +228,10 @@ export async function extractFrames(
     config.maxFrames * 3,
     config,
   );
+
+  // Fades and zooms fire scene detection on many consecutive frames; keep only
+  // the settled (last) frame of each burst. Skipped for the interval fallback.
+  scene = collapseBursts(scene, BURST_GAP_MS, MAX_BURST_MS);
 
   if (scene.length === 0) {
     // Static video (single slide, fixed camera): sample on an interval instead.
