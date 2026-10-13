@@ -23,7 +23,7 @@ export interface RuntimeArtifact {
   executables: ArtifactExecutable[];
 }
 
-const YTDLP_VERSION = '2026.06.09';
+const YTDLP_VERSION = '2026.08.19';
 const YTDLP_BASE = `https://github.com/yt-dlp/yt-dlp/releases/download/${YTDLP_VERSION}`;
 const YTDLP_SOURCE = `https://github.com/yt-dlp/yt-dlp/releases/tag/${YTDLP_VERSION}`;
 
@@ -156,28 +156,28 @@ export const RUNTIME_ARTIFACTS: RuntimeArtifact[] = [
     'darwin',
     'arm64',
     'yt-dlp_macos',
-    'b82c3626952e6c14eaf654cc565866775ffd0b9ffb7021628ac59b42c2f4f244',
+    '0f192b7ec147ab6288885d6351d9ab67367640029b4377576ef46dd79cf7b202',
     'yt-dlp',
   ),
   ytdlp(
     'darwin',
     'x64',
     'yt-dlp_macos',
-    'b82c3626952e6c14eaf654cc565866775ffd0b9ffb7021628ac59b42c2f4f244',
+    '0f192b7ec147ab6288885d6351d9ab67367640029b4377576ef46dd79cf7b202',
     'yt-dlp',
   ),
   ytdlp(
     'linux',
     'x64',
     'yt-dlp_linux',
-    'bf8aac79b72287a6d2043074415132558b43743a8f9461a22b0141e90f16ce66',
+    '58162f9bfdc27458ea47bfcb311cf47028f17d8154a8bf7d689861d46399230a',
     'yt-dlp',
   ),
   ytdlp(
     'win32',
     'x64',
     'yt-dlp.exe',
-    '3a48cb955d55c8821b60ccbdbbc6f61bc958f2f3d3b7ad5eaf3d83a543293a27',
+    '66674953fe251b89f4d08c5f0e35e0728679bd67ab3d7d05c0562af101dd3e7a',
     'yt-dlp.exe',
   ),
   martin(

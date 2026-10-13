@@ -4,10 +4,10 @@
 the following separately distributed programs on first use; they are not
 included in the npm tarball and retain their own licenses.
 
-## yt-dlp 2026.06.09
+## yt-dlp 2026.08.19
 
-- Project and corresponding source: https://github.com/yt-dlp/yt-dlp/tree/2026.06.09
-- Release artifacts: https://github.com/yt-dlp/yt-dlp/releases/tag/2026.06.09
+- Project and corresponding source: https://github.com/yt-dlp/yt-dlp/tree/2026.08.19
+- Release artifacts: https://github.com/yt-dlp/yt-dlp/releases/tag/2026.08.19
 - Upstream project license: Unlicense
 - Standalone executable distribution: GPL-3.0-or-later; see the release's
   bundled component notices and source for the exact executable composition.

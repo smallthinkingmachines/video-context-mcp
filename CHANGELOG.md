@@ -8,6 +8,10 @@ All notable changes to this project will be documented here. The format follows
 
 ### Changed
 
+- Updated the pinned yt-dlp from 2026.06.09 to 2026.08.19. The previous build
+  could list YouTube formats but received HTTP 403 when downloading media, so
+  keyframe indexing failed. After upgrading, run `video-context-mcp setup --update`
+  to switch to the new build.
 - Release automation no longer contacts YouTube. Provider-boundary behavior is
   covered by deterministic metadata and caption fixtures, while the live smoke
   test remains an explicit maintainer command.
